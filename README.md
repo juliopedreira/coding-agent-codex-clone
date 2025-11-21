@@ -1,25 +1,40 @@
 # Codex Clone (Python)
 
-CLI-first Codex-like agent scaffold using LangGraph + LangChain + langchain-openai. Current state is a skeleton ready for tool implementations, workflows, and agent wiring.
+CLI-first Codex-like agent scaffold using LangGraph + LangChain + langchain-openai. The current state focuses on quality gates, tooling, and placeholders for the full Codex toolset and workflow engine.
 
-## Getting Started
-1. Install dependencies (dev): `poetry install`
-2. Run CLI help: `poetry run codex --help`
+## Status
+- Skeleton only: tools/agent/workflows are stubs awaiting full implementations.
+- Quality gates enforced: strict typing (mypy), lint/format (ruff), per-file coverage ≥80%.
 
-## Development Commands
+## Prerequisites
+- Python 3.12
+- Poetry (recommended)
+
+## Setup & Usage
+1) Install deps: `poetry install`  
+2) CLI help: `poetry run codex --help`  
+3) Run a prompt (stub): `poetry run codex run "hello"`  
+4) Run a workflow (stub): `poetry run codex workflow examples/demo.yaml`
+
+## Dev Commands
 - Lint: `poetry run ruff check`
 - Format: `poetry run ruff format`
-- Type check (source only): `poetry run mypy`
-- Tests with coverage: `poetry run pytest`
+- Type check (source only): `poetry run mypy src`
+- Tests + coverage: `poetry run pytest`
 - Per-file coverage gate: `poetry run python scripts/check_coverage.py coverage.json --threshold 80`
 
-## Coverage & Quality Gates
-- Pytest collects coverage for `src/codex` and writes `coverage.json`.
-- `scripts/check_coverage.py` fails if any source file is below 80% line coverage.
-- Source is type-checked under strict mypy settings; tests are excluded from type checking.
+## Quality Gates
+- Pytest writes `coverage.json`; gate script ensures every source file stays ≥80% covered.
+- Strict mypy on `src/codex`; tests excluded from typing.
+- Ruff enforces import order and basic lint rules.
 
 ## Project Layout
-- `src/codex/` — CLI, config, logging, agent stubs, tools, workflows, DB helpers.
-- `tests/` — unit tests, parity/coverage scaffolding.
-- `docs/` — requirements and design documents.
+- `src/codex/` — CLI (`cli.py`), config, logging, agent stubs, tools, workflows, DB helpers.
+- `tests/` — unit coverage for current surface.
+- `docs/` — requirements/design (see `docs/functional/requirements/REQUIREMENTS_v00.md`).
 - `scripts/` — automation utilities (coverage gate).
+
+## Next Steps
+- Implement Codex-parity tools (fs, git, http, search, summarize).
+- Build LangGraph agent assembly and workflow compiler.
+- Add examples and integration tests mirroring original Codex behaviors.
