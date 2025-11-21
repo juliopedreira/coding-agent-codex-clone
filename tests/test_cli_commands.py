@@ -23,3 +23,10 @@ def test_tools_list_command() -> None:
     result = runner.invoke(app, ["tools"])
     assert result.exit_code == 0
     assert "Available tools" in result.stdout
+
+
+def test_interactive_console_runs() -> None:
+    result = runner.invoke(app, [], input="hello\nexit\n")
+    assert result.exit_code == 0
+    assert "Interactive console" in result.stdout
+    assert "Running prompt" in result.stdout
