@@ -9,6 +9,8 @@ def test_run_command_executes() -> None:
     result = runner.invoke(app, ["run", "hello world"])
     assert result.exit_code == 0
     assert "Running prompt" in result.stdout
+    assert "analysis" in result.stdout
+    assert "summary" in result.stdout
 
 
 def test_workflow_command_executes(tmp_path) -> None:
@@ -30,3 +32,4 @@ def test_interactive_console_runs() -> None:
     assert result.exit_code == 0
     assert "Interactive console" in result.stdout
     assert "Running prompt" in result.stdout
+    assert "summary" in result.stdout

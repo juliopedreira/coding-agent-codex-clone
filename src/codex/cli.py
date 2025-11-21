@@ -5,6 +5,7 @@ from typing import Optional
 
 import typer
 
+from codex.agent.runner import run_prompt
 from codex.config import get_settings
 from codex.logging import setup_json_logging
 
@@ -18,7 +19,9 @@ def _run_prompt(prompt: str) -> None:
     settings = get_settings()
     typer.echo(f"[codex] Running prompt with model={settings.model}")
     typer.echo(f"[codex] prompt: {prompt}")
-    typer.echo("[codex] TODO: wire LangGraph agent execution.")
+    result = run_prompt(prompt, settings)
+    typer.echo("[codex] analysis -> " + result["analysis"])
+    typer.echo("[codex] summary  -> " + result["summary"])
 
 
 def _interactive_console() -> None:

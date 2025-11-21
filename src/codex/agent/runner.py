@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import Any, Dict
 
 from codex.config import Settings
+from codex.tools import build_tool_registry
+from codex.tools.text_tools import AnalyzeTool, SummarizeTool
 
 
 def create_agent_graph(settings: Settings) -> Any:
@@ -18,7 +20,25 @@ def create_agent_graph(settings: Settings) -> Any:
 
 
 def run_prompt(prompt: str, settings: Settings) -> Dict[str, Any]:
-    """Stub for running a prompt through the agent graph."""
-    _ = prompt
-    _ = settings
-    raise NotImplementedError("Agent execution is not implemented yet.")
+    """
+    Default lightweight workflow when no workflow file is provided.
+
+    Steps:
+    1) analyze prompt text (word/char counts).
+    2) summarize prompt text to a concise form.
+    """
+    registry = build_tool_registry(settings)
+    analyze_tool: AnalyzeTool = registry["analyze"]  # type: ignore[assignment]
+    summarize_tool: SummarizeTool = registry["summarize"]  # type: ignore[assignment]
+
+    analysis = analyze_tool.run(prompt)
+    summary = summarize_tool.run(prompt, max_tokens=80)
+
+    return {
+        "analysis": analysis.output,
+        "summary": summary.output,
+        "metadata": {
+            "analysis": analysis.metadata,
+            "summary": summary.metadata,
+        },
+    }

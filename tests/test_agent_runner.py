@@ -10,7 +10,8 @@ def test_create_agent_graph_not_implemented() -> None:
         runner.create_agent_graph(settings)
 
 
-def test_run_prompt_not_implemented() -> None:
+def test_run_prompt_returns_summary() -> None:
     settings = Settings(_env_file=None)
-    with pytest.raises(NotImplementedError):
-        runner.run_prompt("hi", settings)
+    result = runner.run_prompt("hi there prompt", settings)
+    assert "summary" in result
+    assert "analysis" in result
