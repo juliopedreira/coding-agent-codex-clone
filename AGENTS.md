@@ -6,20 +6,23 @@
 
 ## Build, Test, and Development Commands
 - Install (dev): `poetry install` — sets up the virtualenv with all extras.
-- Run CLI locally: `poetry run codex --help` (after the CLI is implemented).
-- Tests: `poetry run pytest` — runs unit and integration suites.
-- Lint/format (when added): `poetry run ruff check` ; `poetry run ruff format` (or black, per pyproject).
+- Run CLI locally: `poetry run codex --help`.
+- Tests w/ coverage: `poetry run pytest` (produces `coverage.json`).
+- Per-file coverage gate (>80% each source file): `poetry run python scripts/check_coverage.py coverage.json --threshold 80`.
+- Lint/format: `poetry run ruff check` ; `poetry run ruff format`.
+- Type check (source only): `poetry run mypy`.
 
 ## Coding Style & Naming Conventions
 - Python 3.12; prefer type hints everywhere; enable `from __future__ import annotations` if helpful.
 - Modules: snake_case filenames; classes: CapWords; functions/vars: snake_case.
 - Keep public tool interfaces matching original Codex signatures; avoid breaking CLI flags.
 - Limit side effects in module top-level; use dependency injection for services (LLM, DB, logger).
+- Source code must type-check cleanly under strict mypy; tests are excluded from typing requirements.
 
 ## Testing Guidelines
 - Framework: pytest; place tests mirroring package paths under `tests/`.
 - Name tests `test_<feature>.py`; use fixtures for parity transcripts and tool stubs.
-- Require coverage on tools, workflow compiler, CLI command surfaces, and DB adapters; add regression tests for bugfixes.
+- Require >80% line coverage per source file (enforced via coverage gate); add regression tests for bugfixes.
 - Use deterministic mocks for LLM/search/http; avoid live network in CI.
 
 ## Commit & Pull Request Guidelines

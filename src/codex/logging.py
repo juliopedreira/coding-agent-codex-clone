@@ -10,7 +10,7 @@ def setup_json_logging(level: int = logging.INFO) -> None:
     """Configure simple JSON logging to stdout."""
 
     class JsonFormatter(logging.Formatter):
-        def format(self, record: logging.LogRecord) -> str:  # type: ignore[override]
+        def format(self, record: logging.LogRecord) -> str:
             payload: Dict[str, Any] = {
                 "level": record.levelname,
                 "logger": record.name,

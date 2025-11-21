@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from typing import Generator
 
+from sqlalchemy.engine import Engine
 from sqlmodel import Session, SQLModel, create_engine
 
 
-def get_engine(database_url: str = "sqlite:///codex.db"):
+def get_engine(database_url: str = "sqlite:///codex.db") -> Engine:
     return create_engine(database_url, echo=False, future=True)
 
 

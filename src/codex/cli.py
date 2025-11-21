@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 import typer
 
 from codex.config import get_settings
@@ -13,7 +15,7 @@ def main(
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable debug logging."),
 ) -> None:
     level = "DEBUG" if verbose else "INFO"
-    setup_json_logging()
+    setup_json_logging(level=logging.DEBUG if verbose else logging.INFO)
     typer.echo(f"[codex] starting with log level={level}")
 
 

@@ -14,7 +14,7 @@ class ShellTool(Tool):
         self.allowed_commands = allowed_commands
         self.timeout = timeout
 
-    def run(self, command: str, cwd: str | None = None) -> ToolResult:  # type: ignore[override]
+    def run(self, command: str, cwd: str | None = None) -> ToolResult:
         # Stub implementation; real version will enforce allowlists and streaming.
         try:
             result = subprocess.run(
@@ -27,6 +27,8 @@ class ShellTool(Tool):
             )
             output = result.stdout + result.stderr
             success = result.returncode == 0
-            return ToolResult(output=output, success=success, metadata={"returncode": result.returncode})
+            return ToolResult(
+                output=output, success=success, metadata={"returncode": result.returncode}
+            )
         except subprocess.TimeoutExpired as exc:
             return ToolResult(output=str(exc), success=False, metadata={"returncode": None})

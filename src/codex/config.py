@@ -2,15 +2,19 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional
 
-from pydantic import BaseSettings, Field, validator
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """Runtime configuration for the Codex clone."""
 
-    openai_api_key: Optional[str] = Field(default=None, env="OPENAI_API_KEY")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore"
+    )
+
+    openai_api_key: str | None = Field(default=None)
     model: str = Field(default="gpt-4o")
     temperature: float = Field(default=0.2, ge=0.0, le=2.0)
     workspace_root: Path = Field(default_factory=lambda: Path.cwd())
@@ -18,12 +22,7 @@ class Settings(BaseSettings):
     allow_network: bool = Field(default=True)
     safety_confirm_destructive: bool = Field(default=True)
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
-
-    @validator("workspace_root", pre=True)
+    @field_validator("workspace_root", mode="before")
     def _expand_workspace(cls, value: str | Path) -> Path:
         path = Path(value).expanduser().resolve()
         return path
