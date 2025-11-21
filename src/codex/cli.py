@@ -14,12 +14,15 @@ app = typer.Typer(
 )
 
 
-def _run_prompt(prompt: str) -> None:
+def _run_prompt(prompt: str, model: str | None = None, reasoning: str | None = None) -> None:
     """Shared prompt execution placeholder."""
     settings = get_settings()
-    typer.echo(f"[codex] Running prompt with model={settings.model}")
+    active_model = model or settings.model
+    typer.echo(f"[codex] Running prompt with model={active_model}")
+    if reasoning:
+        typer.echo(f"[codex] reasoning effort={reasoning}")
     typer.echo(f"[codex] prompt: {prompt}")
-    result = run_prompt(prompt, settings)
+    result = run_prompt(prompt, settings, model_override=model, reasoning=reasoning)
     typer.echo("[codex] analysis -> " + result["analysis"])
     typer.echo("[codex] summary  -> " + result["summary"])
 
@@ -27,6 +30,13 @@ def _run_prompt(prompt: str) -> None:
 def _interactive_console() -> None:
     """Simple interactive console similar to original Codex."""
     typer.echo("[codex] Interactive console. Type 'exit' or Ctrl-D to quit.")
+    settings = get_settings()
+    current_model = settings.model
+    current_reasoning = settings.reasoning_effort
+    typer.echo(f"[codex] current model={current_model}")
+    if current_reasoning:
+        typer.echo(f"[codex] current reasoning={current_reasoning}")
+    typer.echo("Commands: /model <name>, /reason <effort>, /help")
     while True:
         try:
             prompt = typer.prompt("codex> ")
@@ -37,7 +47,23 @@ def _interactive_console() -> None:
             continue
         if prompt.strip().lower() in {"exit", "quit"}:
             break
-        _run_prompt(prompt)
+        if prompt.startswith("/"):
+            tokens = prompt.strip().split()
+            cmd = tokens[0][1:]
+            if cmd == "model" and len(tokens) >= 2:
+                current_model = tokens[1]
+                typer.echo(f"[codex] model set to {current_model}")
+                continue
+            if cmd in {"reason", "reasoning"} and len(tokens) >= 2:
+                current_reasoning = tokens[1]
+                typer.echo(f"[codex] reasoning set to {current_reasoning}")
+                continue
+            if cmd in {"help", "h"}:
+                typer.echo("Use /model <name>, /reason <effort>, exit to quit.")
+                continue
+            typer.echo(f"[codex] unknown command '{cmd}'")
+            continue
+        _run_prompt(prompt, model=current_model, reasoning=current_reasoning)
 
 
 @app.callback(invoke_without_command=True)

@@ -13,9 +13,10 @@ CLI-first Codex-like agent scaffold using LangGraph + LangChain + langchain-open
 ## Setup & Usage
 1) Install deps: `poetry install`  
 2) CLI help: `poetry run codex --help`  
-3) Run a prompt (stub): `poetry run codex run "hello"`  
+3) Run a prompt: `poetry run codex run "hello"`  
 4) Run a workflow (stub): `poetry run codex workflow examples/demo.yaml`
-5) Interactive console: `poetry run codex` then type prompts; `exit` to quit.
+5) Interactive console: `poetry run codex` then type prompts; `exit` to quit.  
+   - Commands: `/model <name>` to switch models (default: `codex-max`), `/reason <effort>` to set reasoning effort.
 
 ### Using a virtual environment (recommended)
 If you want an isolated env without touching global Python:

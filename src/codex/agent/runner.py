@@ -19,7 +19,9 @@ def create_agent_graph(settings: Settings) -> Any:
     raise NotImplementedError("Agent graph assembly is not implemented yet.")
 
 
-def run_prompt(prompt: str, settings: Settings) -> Dict[str, Any]:
+def run_prompt(
+    prompt: str, settings: Settings, model_override: str | None = None, reasoning: str | None = None
+) -> Dict[str, Any]:
     """
     Default lightweight workflow when no workflow file is provided.
 
@@ -35,6 +37,8 @@ def run_prompt(prompt: str, settings: Settings) -> Dict[str, Any]:
     summary = summarize_tool.run(prompt, max_tokens=80)
 
     return {
+        "model": model_override or settings.model,
+        "reasoning": reasoning or settings.reasoning_effort,
         "analysis": analysis.output,
         "summary": summary.output,
         "metadata": {

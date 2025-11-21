@@ -33,3 +33,23 @@ def test_interactive_console_runs() -> None:
     assert "Interactive console" in result.stdout
     assert "Running prompt" in result.stdout
     assert "summary" in result.stdout
+
+
+def test_interactive_console_model_command() -> None:
+    result = runner.invoke(app, [], input="/model test-model\n/model x\nhello\nexit\n")
+    assert result.exit_code == 0
+    assert "model set to x" in result.stdout
+    assert "Running prompt with model=x" in result.stdout
+
+
+def test_interactive_console_reason_command() -> None:
+    result = runner.invoke(app, [], input="/reason high\nhello\nexit\n")
+    assert result.exit_code == 0
+    assert "reasoning set to high" in result.stdout
+    assert "reasoning effort=high" in result.stdout
+
+
+def test_interactive_console_unknown_command() -> None:
+    result = runner.invoke(app, [], input="/unknown\nexit\n")
+    assert result.exit_code == 0
+    assert "unknown command" in result.stdout

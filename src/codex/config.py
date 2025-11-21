@@ -15,7 +15,8 @@ class Settings(BaseSettings):
     )
 
     openai_api_key: str | None = Field(default=None)
-    model: str = Field(default="gpt-4o")
+    model: str = Field(default="codex-max")
+    reasoning_effort: str | None = Field(default=None)
     temperature: float = Field(default=0.2, ge=0.0, le=2.0)
     workspace_root: Path = Field(default_factory=lambda: Path.cwd())
     request_timeout_seconds: int = Field(default=60, ge=1)
