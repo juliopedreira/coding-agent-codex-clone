@@ -19,6 +19,7 @@ from codex.tools.filesystem import (
 from codex.tools.git_tools import (
     GitApplyPatchTool,
     GitBranchesTool,
+    GitCommitTool,
     GitDiffTool,
     GitShowTool,
     GitStatusTool,
@@ -93,6 +94,21 @@ index e965047..b6fc4c6 100644
     assert branches.success
 
 
+def test_git_commit_allow_flag(tmp_path: Path) -> None:
+    subprocess.run(["git", "init"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.email", "dev@example.com"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "Dev"], cwd=tmp_path, check=True)
+    (tmp_path / "file.txt").write_text("hello\n")
+    subprocess.run(["git", "add", "file.txt"], cwd=tmp_path, check=True)
+    tool_disabled = GitCommitTool(tmp_path, allow_commits=False)
+    result_disabled = tool_disabled.run(message="msg")
+    assert result_disabled.success is False
+
+    tool_enabled = GitCommitTool(tmp_path, allow_commits=True)
+    result_enabled = tool_enabled.run(message="msg", all=True)
+    assert result_enabled.success is True
+
+
 def test_http_tool_mock() -> None:
     def handler(request: httpx.Request) -> httpx.Response:  # type: ignore[override]
         return httpx.Response(200, text="{\"ok\": true}", request=request)
@@ -132,19 +148,33 @@ def test_text_tools() -> None:
 
 
 def test_workflow_tools(tmp_path: Path) -> None:
-    wf = {"steps": [{"id": "step1", "type": "noop"}]}
+    wf = {
+        "steps": [
+            {"id": "write", "tool": "fs_write", "args": {"path": "out.txt", "content": "data"}},
+            {"id": "read", "tool": "fs_read", "args": {"path": "out.txt"}, "assign": "text"},
+            {
+                "id": "echo",
+                "tool": "shell",
+                "args": {"command": "echo {{text}}", "cwd": str(tmp_path)},
+            },
+        ]
+    }
     wf_path = tmp_path / "workflow.json"
     wf_path.write_text(json.dumps(wf))
 
     validator = WorkflowValidateTool(tmp_path)
     validation = validator.run(str(wf_path))
     assert validation.success
-    assert validation.metadata and validation.metadata["step_count"] == 1
+    assert validation.metadata and validation.metadata["step_count"] == 3
 
+    settings = Settings(workspace_root=tmp_path, allow_network=False, request_timeout_seconds=5)
+    registry = build_tool_registry(settings)
     runner = WorkflowRunTool(tmp_path)
-    run_result = runner.run(str(wf_path), params={"x": "1"})
+    run_result = runner.run(str(wf_path), params={"x": "1"}, registry=registry)
     assert run_result.success
-    assert run_result.metadata and run_result.metadata["params"]["x"] == "1"
+    assert run_result.metadata
+    assert "workflow completed" in run_result.output
+    assert "echo" in "\n".join(run_result.metadata["transcript"])
 
 
 def test_workflow_validation_failure(tmp_path: Path) -> None:

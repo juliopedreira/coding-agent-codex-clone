@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     request_timeout_seconds: int = Field(default=60, ge=1)
     allow_network: bool = Field(default=True)
     safety_confirm_destructive: bool = Field(default=True)
+    allow_git_commits: bool = Field(default=False)
 
     @field_validator("workspace_root", mode="before")
     def _expand_workspace(cls, value: str | Path) -> Path:

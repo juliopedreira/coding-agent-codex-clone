@@ -49,6 +49,7 @@ def build_tool_registry(settings: Settings) -> dict[str, object]:
     """Instantiate all tools with project settings."""
     workspace = settings.workspace_root
     allow_network = settings.allow_network
+    allow_git_commits = settings.allow_git_commits
     registry: dict[str, object] = {
         "shell": ShellTool(timeout=settings.request_timeout_seconds),
         "fs_read": FsReadTool(workspace),
@@ -62,7 +63,7 @@ def build_tool_registry(settings: Settings) -> dict[str, object]:
         "git_show": GitShowTool(workspace),
         "git_apply_patch": GitApplyPatchTool(workspace),
         "git_branches": GitBranchesTool(workspace),
-        "git_commit": GitCommitTool(workspace, allow_commits=False),
+        "git_commit": GitCommitTool(workspace, allow_commits=allow_git_commits),
         "http": HttpTool(allow_network=allow_network),
         "search": SearchTool(allow_network=allow_network),
         "summarize": SummarizeTool(),

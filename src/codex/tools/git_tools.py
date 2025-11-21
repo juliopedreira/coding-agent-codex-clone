@@ -119,5 +119,5 @@ class GitCommitTool(_GitTool):
             )
         args = ["commit", "-m", message]
         if all:
-            args.insert(0, "-a")
+            args.insert(1, "-a")
         return self._run_git(args, repo_path=repo_path)
