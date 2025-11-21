@@ -16,6 +16,19 @@ CLI-first Codex-like agent scaffold using LangGraph + LangChain + langchain-open
 3) Run a prompt (stub): `poetry run codex run "hello"`  
 4) Run a workflow (stub): `poetry run codex workflow examples/demo.yaml`
 
+### Using a virtual environment (recommended)
+If you want an isolated env without touching global Python:
+1) Create and activate:  
+   - `python3 -m venv .venv`  
+   - `source .venv/bin/activate`
+2) Upgrade pip and install Poetry inside the venv:  
+   - `pip install --upgrade pip`  
+   - `pip install poetry`
+3) Install project deps (still uses Poetry, but now inside your venv):  
+   - `poetry install`
+4) Run commands as usual:  
+   - `poetry run codex --help` or any of the commands above.
+
 ## Dev Commands
 - Lint: `poetry run ruff check`
 - Format: `poetry run ruff format`
