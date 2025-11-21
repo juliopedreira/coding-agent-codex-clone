@@ -2,7 +2,7 @@
 
 ## INTRODUCTION
 - Goal: Ship a production-ready CLI-only Codex clone MVP on Linux using LangGraph + LangChain + langchain-openai with full Codex tool parity, YAML/JSON workflows, SQLite + tracked artifacts, JSON logging to stdout and file, and enforced quality gates.
-- Scope decisions: OpenAI-only LLM; full host access tools with warnings (no confirmations); artifacts stored under `artifacts/<run_id>/`; per-file coverage ≥80%; Poetry packaging only; no external deadlines.
+- Scope decisions: Python 3.12 only; OpenAI-only LLM; full host access tools with warnings (no confirmations); artifacts stored under `artifacts/<run_id>/`; per-file coverage ≥80%; Poetry packaging only; privative license; no external deadlines.
 
 ## ARCHITECTURE
 - Layers: CLI (Typer) → Config/Logging → Agent Runner (LangGraph single-agent) → Tool Registry (Codex parity) → OpenAI client → Persistence (SQLite + artifact index) → JSON Logging.
@@ -86,7 +86,7 @@
 - Tests/CI: Run ruff, mypy, pytest, coverage gate in pipeline.
 
 ## FINAL CHECKLIST
-- Confirm scope: CLI-only Linux; OpenAI-only; full toolset; YAML/JSON workflows; SQLite + tracked artifacts; logs stdout + `logs/codex.log`; warnings only for destructive ops.
+- Confirm scope: CLI-only Linux; Python 3.12; OpenAI-only; full toolset; YAML/JSON workflows; SQLite + tracked artifacts; logs stdout + `logs/codex.log`; warnings only for destructive ops; privative license.
 - Finalize search backend choice and config flags.
 - Define workflow schema v1 and example files.
 - Implement LangGraph agent assembly and workflow compiler.
