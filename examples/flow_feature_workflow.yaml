@@ -7,6 +7,11 @@ steps:
     args:
       path: tmp/flow_feature
 
+  - id: ScanCodebase
+    tool: fs_list
+    args:
+      path: src
+
   - id: ExplainCodebase
     tool: llm_node
     args:
@@ -38,6 +43,37 @@ steps:
       model: "gpt-4o-mini"
       tools: ["summarize", "analyze"]
 
+  - id: DecomposeTasksLevel1
+    tool: llm_node
+    context_keys: [FEATURE]
+    args:
+      system_prompt: "Further decompose tasks into 2-4 concrete subtasks if they are still broad."
+      user_message: |
+        Break down each item into concrete subtasks (keep <=4 words each). Items: {{steps['PlanRefactors'].output.tasks}}
+      json_schema:
+        subtasks: ["string"]
+      max_tokens: 180
+      model: "gpt-4o-mini"
+      tools: ["summarize"]
+
+  - id: DecomposeTasksLevel2
+    tool: llm_node
+    context_keys: [FEATURE]
+    args:
+      system_prompt: "Final decomposition pass; only split if still vague."
+      user_message: |
+        If any are still vague, split them; otherwise return the originals. Items: {{steps['DecomposeTasksLevel1'].output.subtasks}}
+      json_schema:
+        subtasks: ["string"]
+      max_tokens: 160
+      model: "gpt-4o-mini"
+
+  - id: RecordSubtasks
+    tool: fs_write
+    args:
+      path: tmp/flow_feature/subtasks.md
+      content: "# Subtasks for {{FEATURE}}\n{{steps['DecomposeTasksLevel2'].output.subtasks}}\n"
+
   - id: RecordRefactors
     tool: fs_write
     args:
@@ -54,9 +90,19 @@ steps:
 
   - id: TestRefactor
     tool: shell_command
+    loop: "{{steps['PlanRefactors'].output.tasks}}"
+    loop_var: refactor
     args:
-      command: "cd tmp/flow_feature && echo 'tests ok (refactor stage)'"
+      command: "cd tmp/flow_feature && echo 'tests ok ({{refactor}})'"
     when: "steps['PlanRefactors'] != None"
+
+  - id: FixRefactor
+    tool: shell_command
+    loop: "{{steps['PlanRefactors'].output.tasks}}"
+    loop_var: refactor
+    when: "not steps['TestRefactor'].success"
+    args:
+      command: "cd tmp/flow_feature && echo 'fix for {{refactor}}' >> refactors.md"
 
   - id: CommitRefactor
     tool: shell_command
@@ -125,6 +171,23 @@ steps:
     when: "not steps['TestFeature'].success"
     args:
       command: "cd tmp/flow_feature && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 pytest -q --override-ini addopts=''"
+
+  - id: FailGate
+    tool: llm_node
+    context_keys: [feature_tests]
+    args:
+      system_prompt: "You decide if workflow should stop because tests are failing."
+      user_message: "Test output: {{steps['TestFeature'].output}}"
+      json_schema:
+        proceed: true
+      max_tokens: 10
+    when: "not steps['TestFeature'].success"
+
+  - id: StopIfFailing
+    tool: shell_command
+    when: "not steps['TestFeature'].success"
+    args:
+      command: "exit 1"
 
   - id: CommitFeature
     tool: shell_command
