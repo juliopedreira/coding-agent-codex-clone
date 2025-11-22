@@ -68,6 +68,10 @@ class LlmNodeTool(Tool):
             except Exception:
                 prompt_message += "\n(Context serialization failed; using raw context omitted.)"
 
+        if tools:
+            tool_list = tools if isinstance(tools, list) else [tools]
+            prompt_message += "\nTools available: " + ", ".join(tool_list)
+
         if ChatOpenAI and self.settings.openai_api_key:
             try:
                 llm = ChatOpenAI(

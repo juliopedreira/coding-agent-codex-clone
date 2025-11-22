@@ -2,7 +2,9 @@ import json
 
 from codax.config import Settings
 from codax.tools.llm_node import LlmNodeTool
-from codax.tools.workflow_tools import StepRecord, _render_value, _select_context
+from codax.tools.workflow_tools import StepRecord, _render_value, _select_context, WorkflowRunTool
+from codax.tools.base import Tool, ToolResult
+from typing import Any
 from codax.workflows import compiler
 
 
@@ -46,3 +48,27 @@ def test_select_context_keys_are_passed() -> None:
     assert selected["foo"] == "bar"
     assert selected["X"] == "baz"
     assert "missing" in selected
+
+
+def test_tools_star_expands_in_runner(tmp_path) -> None:
+    class EchoTool(Tool):
+        name = "echo"
+        description = "echo"
+
+        def __init__(self) -> None:
+            self.seen_tools = None
+
+        def run(self, **kwargs: Any) -> ToolResult:  # type: ignore[override]
+            self.seen_tools = kwargs.get("tools")
+            return ToolResult(output="ok", success=True, metadata=None)
+
+    echo = EchoTool()
+    registry = {"echo": echo, "other": EchoTool()}
+    wf = tmp_path / "wf.json"
+    wf.write_text(json.dumps({"steps": [{"id": "one", "tool": "echo", "args": {"tools": "*"}}]}))
+
+    runner = WorkflowRunTool(tmp_path)
+    result = runner.run(str(wf), registry=registry)
+    assert result.success
+    assert isinstance(echo.seen_tools, list)
+    assert set(echo.seen_tools) == set(registry.keys())

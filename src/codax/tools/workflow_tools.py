@@ -178,6 +178,12 @@ class WorkflowRunTool(Tool):
         raw_args: Dict[str, Any] = step.get("args", {})
         rendered_args = self._render_args(raw_args, context)
 
+        # Optional tool availability hints expansion for LLM-like nodes.
+        if "tools" in rendered_args:
+            tools_val = rendered_args["tools"]
+            if tools_val == "*" or (isinstance(tools_val, list) and "*" in tools_val):
+                rendered_args["tools"] = sorted(registry.keys())
+
         # Optional fine-grained context passing for tools that support it.
         if step.get("context_keys") and getattr(tool, "accepts_context", False):
             keys = step.get("context_keys")
