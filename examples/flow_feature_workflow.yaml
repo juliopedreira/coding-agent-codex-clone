@@ -1,0 +1,169 @@
+# Full-cycle feature workflow with flow control and scoped LLM context.
+# Usage:
+#   poetry run codax workflow examples/flow_feature_workflow.yaml --FEATURE="Add a login mechanism"
+steps:
+  - id: SetupWorkspace
+    tool: fs_mkdir
+    args:
+      path: tmp/flow_feature
+
+  - id: ExplainCodebase
+    tool: llm_node
+    args:
+      system_prompt: "You summarize codebases concisely."
+      user_message: "List key areas from src/. Entries: {{steps['ScanCodebase'].output}}"
+      tools: "*"
+      max_tokens: 120
+
+  - id: ExplainRequest
+    tool: llm_node
+    context_keys: [FEATURE]
+    args:
+      system_prompt: "You restate the user feature request crisply."
+      user_message: "Restate the requested feature: {{FEATURE}}"
+      json_schema:
+        restatement: "string"
+      max_tokens: 80
+      reasoning: "medium"
+
+  - id: PlanRefactors
+    tool: llm_node
+    context_keys: [FEATURE]
+    args:
+      system_prompt: "You propose pre-change refactors to make implementation easier."
+      user_message: "Give 2-3 refactors (short labels) to prep for: {{FEATURE}}"
+      json_schema:
+        tasks: ["string"]
+      max_tokens: 120
+      model: "gpt-4o-mini"
+      tools: ["summarize", "analyze"]
+
+  - id: RecordRefactors
+    tool: fs_write
+    args:
+      path: tmp/flow_feature/refactors.md
+      content: "# Refactors for {{FEATURE}}\n{{steps['PlanRefactors'].output.tasks}}\n"
+
+  - id: ApplyRefactor
+    tool: shell_command
+    loop: "{{steps['PlanRefactors'].output.tasks}}"
+    loop_var: refactor
+    allow_failure: true
+    args:
+      command: "cd tmp/flow_feature && echo 'refactor: {{refactor}}' >> refactors.md"
+
+  - id: TestRefactor
+    tool: shell_command
+    args:
+      command: "cd tmp/flow_feature && echo 'tests ok (refactor stage)'"
+    when: "steps['PlanRefactors'] != None"
+
+  - id: CommitRefactor
+    tool: shell_command
+    allow_failure: true
+    args:
+      command: "git add -f tmp/flow_feature/refactors.md && git commit -m 'chore: apply preparatory refactors'"
+
+  - id: PushRefactor
+    tool: shell_command
+    allow_failure: true
+    args:
+      command: "git push"
+
+  - id: WriteFeatureTests
+    tool: fs_write
+    args:
+      path: tmp/flow_feature/test_feature_flow.py
+      content: |
+        from feature_impl import deliver_feature
+
+        FEATURE = "{{FEATURE}}"
+
+        def test_status_message():
+            result = deliver_feature(FEATURE)
+            assert result["status"] == "done"
+            assert FEATURE in result["message"]
+
+        def test_idempotent_and_notes():
+            a = deliver_feature(FEATURE)
+            b = deliver_feature(FEATURE)
+            assert a == b
+            assert "notes" in a and FEATURE in a["notes"]
+
+  - id: ImplementFeature
+    tool: fs_write
+    args:
+      path: tmp/flow_feature/feature_impl.py
+      content: |
+        from functools import lru_cache
+
+        @lru_cache(maxsize=None)
+        def deliver_feature(feature: str) -> dict[str, str]:
+            """Return a deterministic record showing the feature is delivered."""
+            return {
+                "feature": feature,
+                "status": "done",
+                "message": f"Implemented: {feature}",
+                "notes": f"Validated via automated workflow for {feature}",
+            }
+
+  - id: TestFeature
+    tool: shell_command
+    allow_failure: true
+    args:
+      command: "cd tmp/flow_feature && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 pytest -q --override-ini addopts=''"
+    assign: feature_tests
+
+  - id: FixFeatureIfNeeded
+    tool: shell_command
+    when: "not steps['TestFeature'].success"
+    args:
+      command: "cd tmp/flow_feature && echo 'fix applied' >> feature_impl.py"
+
+  - id: ReTestFeature
+    tool: shell_command
+    when: "not steps['TestFeature'].success"
+    args:
+      command: "cd tmp/flow_feature && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 pytest -q --override-ini addopts=''"
+
+  - id: CommitFeature
+    tool: shell_command
+    allow_failure: true
+    args:
+      command: "git add -f tmp/flow_feature && git commit -m 'feat: deliver {{FEATURE}}'"
+
+  - id: PushFeature
+    tool: shell_command
+    allow_failure: true
+    args:
+      command: "git push"
+
+  - id: TechDebtSweep
+    tool: llm_node
+    context_keys: [FEATURE]
+    args:
+      system_prompt: "You list quick tech-debt cleanups now that feature is done."
+      user_message: "List 2 quick debt items cleared for {{FEATURE}}"
+      json_schema:
+        debt: ["string"]
+      max_tokens: 80
+      tools: "*"
+
+  - id: RecordDebt
+    tool: fs_write
+    args:
+      path: tmp/flow_feature/tech_debt.md
+      append: true
+      content: "{{steps['TechDebtSweep'].output.debt}}\n"
+
+  - id: CommitDebt
+    tool: shell_command
+    allow_failure: true
+    args:
+      command: "git add -f tmp/flow_feature/tech_debt.md && git commit -m 'chore: address tech debt for {{FEATURE}}'"
+
+  - id: PushDebt
+    tool: shell_command
+    allow_failure: true
+    args:
+      command: "git push"
