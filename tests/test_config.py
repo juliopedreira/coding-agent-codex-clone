@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from codex.config import Settings, get_settings
+from codax.config import Settings, get_settings
 
 
 def test_settings_workspace_expands(tmp_path: Path, monkeypatch) -> None:

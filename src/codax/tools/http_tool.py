@@ -4,16 +4,23 @@ from typing import Any, Dict
 
 import httpx
 
-from codex.tools.base import Tool, ToolResult
+from codax.safety import ActionType, SafetyPolicy, guard_action
+from codax.tools.base import Tool, ToolResult
 
 
 class HttpTool(Tool):
     name = "http"
     description = "Perform HTTP requests (GET/POST) with headers and body."
 
-    def __init__(self, allow_network: bool = True, client: httpx.Client | None = None) -> None:
+    def __init__(
+        self,
+        allow_network: bool = True,
+        client: httpx.Client | None = None,
+        policy: SafetyPolicy | None = None,
+    ) -> None:
         self.allow_network = allow_network
         self.client = client or httpx.Client(timeout=20)
+        self.policy = policy
 
     def run(
         self,
@@ -28,6 +35,12 @@ class HttpTool(Tool):
         if not self.allow_network:
             return ToolResult(output="network access disabled", success=False, metadata=None)
 
+        action = ActionType.HTTP_POST if method.lower() == "post" else ActionType.UNKNOWN
+        if self.policy:
+            safety = guard_action(self.policy, action, f"{method.upper()} {url}")
+            if safety:
+                return safety
+
         try:
             response = self.client.request(
                 method=method.upper(),
@@ -39,12 +52,13 @@ class HttpTool(Tool):
                 timeout=timeout,
             )
             body = response.text
+            content_type = response.headers.get("content-type", "")
+            if "xml" not in content_type and len(body) > 20000:
+                body = body[:20000] + "\n[truncated]"
             elapsed_ms = None
             try:
                 if response.elapsed is not None:
                     elapsed_ms = response.elapsed.total_seconds() * 1000
-                else:
-                    elapsed_ms = None
             except RuntimeError:
                 elapsed_ms = None
             metadata = {

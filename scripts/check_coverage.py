@@ -22,8 +22,8 @@ def verify_threshold(data: Dict[str, object], threshold: float) -> int:
             continue
         summary = info.get("summary", {})
         percent = summary.get("percent_covered", 0.0)
-        # Only enforce for source files under codex package.
-        if "src/codex" not in filename:
+        # Only enforce for source files under codax package.
+        if "src/codax" not in filename:
             continue
         if percent < threshold:
             failures.append(f"{filename}: {percent:.1f}% (min {threshold}%)")

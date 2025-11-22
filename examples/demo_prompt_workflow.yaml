@@ -1,0 +1,29 @@
+steps:
+  - id: list
+    tool: list_dir
+    args:
+      dir_path: .
+      depth: 1
+  - id: readme
+    tool: read_file
+    args:
+      file_path: README.md
+      offset: 1
+      limit: 60
+    assign: readme_text
+  - id: prompt
+    tool: summarize
+    args:
+      text: "Act as a tech writer. Given this README excerpt, provide a 3-bullet summary and mention how to run workflows:\n{{readme_text}}"
+      max_tokens: 120
+  - id: plan
+    tool: update_plan
+    args:
+      plan:
+        - step: "List repo"
+          status: "done"
+        - step: "Read README"
+          status: "done"
+        - step: "LLM summary"
+          status: "done"
+      explanation: "Demo with LLM prompt"

@@ -1,13 +1,16 @@
-import pytest
-
-from codex.agent import runner
-from codex.config import Settings
+from codax.agent import runner
+from codax.config import Settings
 
 
-def test_create_agent_graph_not_implemented() -> None:
+def test_create_agent_graph_returns_graph() -> None:
     settings = Settings(_env_file=None)
-    with pytest.raises(NotImplementedError):
-        runner.create_agent_graph(settings)
+    graph = runner.create_agent_graph(settings)
+    assert graph.settings == settings
+    result = graph.run("hi")
+    assert "summary" in result
+    # streaming path
+    stream = list(graph.stream("hello"))
+    assert stream[-1]["type"] == "done"
 
 
 def test_run_prompt_returns_summary() -> None:

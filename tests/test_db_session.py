@@ -1,7 +1,7 @@
 from sqlalchemy import text
 from sqlmodel import Field, SQLModel
 
-from codex.db.session import get_engine, get_session, init_db
+from codax.db.session import get_engine, get_session, init_db
 
 
 def test_init_db_creates_tables(tmp_path) -> None:

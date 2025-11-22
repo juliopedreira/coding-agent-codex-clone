@@ -4,8 +4,9 @@ import subprocess
 from pathlib import Path
 from typing import List
 
-from codex.tools.base import Tool, ToolResult
-from codex.tools.filesystem import _ensure_workspace
+from codax.safety import ActionType, SafetyPolicy, guard_action
+from codax.tools.base import Tool, ToolResult
+from codax.tools.filesystem import _ensure_workspace
 
 
 class _GitTool(Tool):
@@ -19,7 +20,9 @@ class _GitTool(Tool):
             capture_output=True,
             text=True,
         )
-        output = result.stdout + result.stderr
+        output = (result.stdout or "") + (result.stderr or "")
+        if len(output) > 4000:
+            output = output[:4000] + "\n[truncated]"
         return ToolResult(
             output=output,
             success=result.returncode == 0,
@@ -74,7 +77,7 @@ class GitApplyPatchTool(_GitTool):
             capture_output=True,
         )
         if check_result.returncode != 0:
-            output = check_result.stdout + check_result.stderr
+            output = (check_result.stdout or "") + (check_result.stderr or "")
             return ToolResult(
                 output=output, success=False, metadata={"returncode": check_result.returncode}
             )
@@ -85,7 +88,9 @@ class GitApplyPatchTool(_GitTool):
             text=True,
             capture_output=True,
         )
-        output = apply_result.stdout + apply_result.stderr
+        output = (apply_result.stdout or "") + (apply_result.stderr or "")
+        if len(output) > 4000:
+            output = output[:4000] + "\n[truncated]"
         return ToolResult(
             output=output,
             success=apply_result.returncode == 0,
@@ -108,15 +113,15 @@ class GitCommitTool(_GitTool):
     name = "git_commit"
     description = "Create commit when enabled."
 
-    def __init__(self, workspace_root: Path, allow_commits: bool = False) -> None:
+    def __init__(self, workspace_root: Path, policy: SafetyPolicy) -> None:
         super().__init__(workspace_root)
-        self.allow_commits = allow_commits
+        self.policy = policy
 
     def run(self, repo_path: str = ".", message: str = "", all: bool = False) -> ToolResult:
-        if not self.allow_commits:
-            return ToolResult(
-                output="git commit is disabled by configuration", success=False, metadata=None
-            )
+        detail = f"git commit in {repo_path} message='{message}'"
+        safety = guard_action(self.policy, ActionType.GIT_COMMIT, detail)
+        if safety:
+            return safety
         args = ["commit", "-m", message]
         if all:
             args.insert(1, "-a")

@@ -1,41 +1,41 @@
 # Architecture
 
 ## Overview
-- Goal: CLI-first Codex clone using LangGraph + LangChain + langchain-openai with Codex-parity tools, YAML/JSON workflows, SQLite persistence, and strict quality gates.
-- Current state: scaffolding with tested stubs; no agent execution yet.
+- Goal: CLI-first Codax agent using LangGraph-style planner/executor with Codax-parity tools, YAML/JSON workflows, pluggable search, and strict quality gates.
+- Current state: working CLI/runtime with safety policy, workflow runner, search backends, and tested tool suite; SQLite helper remains optional, file-based state under `~/.codax/`.
 
 ## Components
-- `codex.cli`: Typer-based CLI entry; commands `run`, `workflow`, `tools`.
-- `codex.config`: Pydantic settings loader (env/`.env`), model/timeout/safety flags.
-- `codex.logging`: JSON logger setup; root handler to stdout.
-- `codex.tools.*`: Tool interfaces (base + shell stub) matching Codex-like signatures.
-- `codex.workflows.compiler`: Placeholder loader/compiler from YAML/JSON to LangGraph DAG.
-- `codex.agent.runner`: Future LangGraph assembly and execution loop.
-- `codex.db.session`: SQLite engine/session helpers (SQLModel/SQLAlchemy).
+- `codax.cli`: Typer-based CLI entry; commands `run`, `workflow`, `tools`.
+- `codax.config`: Pydantic settings loader (env/`.env`), model/timeout/safety flags.
+- `codax.logging`: JSON logger with rotation and redaction; stdout reserved for stream.
+- `codax.tools.*`: Tool interfaces (shell/fs/git/http/search/text/workflow) with safety hooks.
+- `codax.workflows.compiler`: Loads/compiles workflow docs to a runnable wrapper.
+- `codax.agent.runner`: Minimal planner/executor graph that analyzes and summarizes prompts.
+- `codax.db.session`: SQLite engine/session helpers (optional).
 
 ## Control Flow (target design)
-1) CLI parses flags → loads settings → configures logging.
-2) For `run`: build LangGraph graph (planner + tool executor) → stream steps → persist run metadata.
-3) For `workflow`: load workflow doc → validate schema → compile to graph → execute.
-4) Tool calls: routed via registry; safety warnings for destructive ops.
-5) Persistence: SQLite records runs, tool invocations, workflow defs; artifacts stored in workspace FS.
+1) CLI parses flags → loads settings from env/TOML → configures logging.
+2) For `run`: build agent graph (planner + executor) → run analysis/summarization → stream tokens.
+3) For `workflow`: load workflow doc → validate schema → execute steps with registry and context.
+4) Tool calls: routed via registry; safety policy gates risky actions/commits; network toggle respected.
+5) Persistence: file-based state under `~/.codax/`; SQLite helper available but not required.
 
 ## Workflows (planned)
 - Input: YAML/JSON describing steps, tools, conditionals.
-- Validation: pydantic models; versioned schema.
-- Compilation: translate nodes/edges to LangGraph; variables passed via context.
+- Validation: lightweight schema check (steps list); versioned schema planned.
+- Compilation: runnable wrapper invoking workflow tool runner; variables passed via context.
 
 ## Tools (planned parity)
-- Shell, filesystem, git, HTTP, search, summarize/analysis; consistent ToolSpec signatures; allowlists and confirmations for risky actions.
+- Shell, filesystem, git, HTTP, search (OpenAI/DDG), summarize/analysis; consistent signatures; safety approval hooks.
 
 ## Quality Gates
-- Strict mypy on `src/codex`; tests skipped from typing.
+- Strict mypy on `src/codax`; tests skipped from typing.
 - Ruff for lint/format.
 - Pytest with coverage json; `scripts/check_coverage.py` enforces ≥80% per source file.
 
 ## Persistence & Config
-- Default DB: `sqlite:///codex.db`; migration path via SQLModel/Alembic later.
-- Settings precedence: env > `.env` > defaults; key `OPENAI_API_KEY` required for live runs.
+- Default state: files under `~/.codax/` (config/logs); optional DB `sqlite:///~/.codax/codax.db`.
+- Settings precedence: init > TOML config > env; OpenAI key optional (used when set).
 
 ## Roadmap
 - Implement full toolset with safety guards.

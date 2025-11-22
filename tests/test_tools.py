@@ -1,7 +1,9 @@
 import sys
 
-from codex.tools.base import Tool, ToolResult
-from codex.tools.shell import ShellTool
+from codax.config import Settings
+from codax.safety import build_policy
+from codax.tools.base import Tool, ToolResult
+from codax.tools.shell import ShellTool
 
 
 class EchoTool(Tool):
@@ -12,6 +14,10 @@ class EchoTool(Tool):
         return ToolResult(output=text, success=True)
 
 
+def _policy() -> object:
+    return build_policy(Settings(_env_file=None))
+
+
 def test_tool_base_subclass_runs() -> None:
     tool = EchoTool()
     result = tool.run("hi")
@@ -20,7 +26,7 @@ def test_tool_base_subclass_runs() -> None:
 
 
 def test_shell_tool_executes_command(tmp_path) -> None:
-    tool = ShellTool(timeout=5)
+    tool = ShellTool(timeout=5, policy=_policy())
     msg = "hello-shell"
     result = tool.run(f'"{sys.executable}" -c "print(\'{msg}\')"', cwd=str(tmp_path))
     assert result.success
@@ -28,7 +34,7 @@ def test_shell_tool_executes_command(tmp_path) -> None:
 
 
 def test_shell_tool_timeout(tmp_path) -> None:
-    tool = ShellTool(timeout=1)
+    tool = ShellTool(timeout=1, policy=_policy())
     # Use python sleep for cross-platform
     result = tool.run(f'"{sys.executable}" -c "import time; time.sleep(2)"', cwd=str(tmp_path))
     assert not result.success

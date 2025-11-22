@@ -7,7 +7,7 @@ ARCHITECTURE
 - Storage: SQLite for runs, tool invocations, workflow definitions, and artifact metadata; workspace filesystem for artifacts.
 - Config: environment variables plus optional config file (toml/yaml) for API keys, workspace paths, safety toggles, model settings.
 - Safety posture: tools have host access; warn/confirm on risky operations (e.g., recursive delete, network POST to non-allowlisted hosts).
-- Packaging: Poetry project; `codex` CLI installed via `poetry install`.
+- Packaging: Poetry project; `codax` CLI installed via `poetry install`.
 - Testing: pytest; split parity fixtures vs. feature unit/integration tests; test DB migrations; golden transcripts for CLI/agent flows.
 
 FEATURES DESIGN
@@ -63,7 +63,7 @@ FEATURES DESIGN
   - Tests: Migration smoke; CRUD for runs and workflows; concurrent insert within single process; rollback on failure.
 
 - CLI
-  - Functional: Commands: `codex run <prompt>`, `codex workflow run <file>`, `codex tools list`, `codex logs <run_id>`, `codex persist show`, `codex config check`.
+  - Functional: Commands: `codax run <prompt>`, `codax workflow run <file>`, `codax tools list`, `codax logs <run_id>`, `codax persist show`, `codax config check`.
   - Technical: Typer/Click-based; JSON output option; colored terminal output optional; dependency-injected services; supports verbose/debug flags.
   - Tests: CLI invocation via pytest + CliRunner; correct exit codes; JSON output validity; help text presence.
 

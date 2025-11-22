@@ -5,7 +5,8 @@ import os
 import shutil
 from pathlib import Path
 
-from codex.tools.base import Tool, ToolResult
+from codax.safety import ActionType, SafetyPolicy, guard_action
+from codax.tools.base import Tool, ToolResult
 
 
 def _ensure_workspace(path: Path, workspace_root: Path) -> Path:
@@ -104,11 +105,15 @@ class FsRemoveTool(Tool):
     name = "fs_remove"
     description = "Remove a file or directory."
 
-    def __init__(self, workspace_root: Path) -> None:
+    def __init__(self, workspace_root: Path, policy: SafetyPolicy) -> None:
         self.workspace_root = workspace_root
+        self.policy = policy
 
     def run(self, path: str, recursive: bool = False, force: bool = False) -> ToolResult:
         target = _ensure_workspace(Path(path), self.workspace_root)
+        safety = guard_action(self.policy, ActionType.FILE_REMOVE, f"remove {target}")
+        if safety:
+            return safety
         if not target.exists():
             if force:
                 return ToolResult(output="not found", success=True, metadata={"removed": False})

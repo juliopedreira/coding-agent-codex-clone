@@ -7,7 +7,7 @@
 - Python 3.12 only; Linux target.
 - OpenAI-only LLM; privative license.
 - Full host-access tools with warnings (no confirmations by default).
-- Artifacts under `artifacts/<run_id>/`; JSON logs to stdout + `logs/codex.log`.
+- Artifacts under `artifacts/<run_id>/`; JSON logs to stdout + `logs/codax.log`.
 - Poetry packaging; per-file coverage ≥80%; ruff, strict mypy, pytest + coverage gate.
 
 ## SHARED TOOL CONTRACT

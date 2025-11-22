@@ -11,7 +11,7 @@
 - Safety: Host access; destructive ops log warnings only (no prompts/allowlists by default). Secret redaction in logs.
 - Packaging: Poetry; optional `poetry build` for wheel/sdist.
 - Platform: Linux target (primary).
-- Quality gates: Ruff lint/format; strict mypy on `src/codex`; pytest + per-file coverage ≥80% enforced by gate script.
+- Quality gates: Ruff lint/format; strict mypy on `src/codax`; pytest + per-file coverage ≥80% enforced by gate script.
 
 ## FEATURES DESIGN
 
@@ -66,12 +66,12 @@
 - Tests: Migration smoke; CRUD; artifact path creation; single-process concurrency.
 
 ### Logging
-- Functional: JSON logs to stdout and default file `logs/codex.log`; run correlation IDs.
+- Functional: JSON logs to stdout and default file `logs/codax.log`; run correlation IDs.
 - Technical: Dual handlers; level from CLI; secret redaction; rotation optional later.
 - Tests: Log format; file write; redaction; level filtering.
 
 ### CLI
-- Functional: `codex run <prompt>`, `codex workflow run <file>`, `codex tools list`, `codex logs <run_id>`, `codex config check`.
+- Functional: `codax run <prompt>`, `codax workflow run <file>`, `codax tools list`, `codax logs <run_id>`, `codax config check`.
 - Technical: Typer commands; JSON output mode; uses settings/services; Linux focused.
 - Tests: CliRunner invocations; JSON flag; exit codes; config check output.
 
@@ -86,7 +86,7 @@
 - Tests/CI: Run ruff, mypy, pytest, coverage gate in pipeline.
 
 ## FINAL CHECKLIST
-- Confirm scope: CLI-only Linux; Python 3.12; OpenAI-only; full toolset; YAML/JSON workflows; SQLite + tracked artifacts; logs stdout + `logs/codex.log`; warnings only for destructive ops; privative license.
+- Confirm scope: CLI-only Linux; Python 3.12; OpenAI-only; full toolset; YAML/JSON workflows; SQLite + tracked artifacts; logs stdout + `logs/codax.log`; warnings only for destructive ops; privative license.
 - Finalize search backend choice and config flags.
 - Define workflow schema v1 and example files.
 - Implement LangGraph agent assembly and workflow compiler.

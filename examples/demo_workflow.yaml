@@ -1,0 +1,26 @@
+steps:
+  - id: list
+    tool: list_dir
+    args:
+      dir_path: .
+      depth: 1
+  - id: readme
+    tool: read_file
+    args:
+      file_path: README.md
+      offset: 1
+      limit: 20
+  - id: summarize
+    tool: summarize
+    args:
+      text: "{{readme}}"
+      max_tokens: 80
+  - id: plan
+    tool: update_plan
+    args:
+      plan:
+        - step: "Inspect README"
+          status: "done"
+        - step: "Summarize README"
+          status: "done"
+      explanation: "Demo workflow run"

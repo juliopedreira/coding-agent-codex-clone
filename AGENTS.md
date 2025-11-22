@@ -2,11 +2,11 @@
 
 ## Project Structure & Module Organization
 - `docs/functional/requirements/` holds functional requirements; expand with design docs as features land.
-- Planned layout: `src/codex/` for CLI, agent graph, tools; `tests/` for unit/integration and parity fixtures; `examples/` for sample workflows (YAML/JSON); `scripts/` for utilities.
+- Planned layout: `src/codax/` for CLI, agent graph, tools; `tests/` for unit/integration and parity fixtures; `examples/` for sample workflows (YAML/JSON); `scripts/` for utilities.
 
 ## Build, Test, and Development Commands
 - Install (dev): `poetry install` — sets up the virtualenv with all extras.
-- Run CLI locally: `poetry run codex --help`.
+- Run CLI locally: `poetry run codax --help`.
 - Tests w/ coverage: `poetry run pytest` (produces `coverage.json`).
 - Per-file coverage gate (>80% each source file): `poetry run python scripts/check_coverage.py coverage.json --threshold 80`.
 - Lint/format: `poetry run ruff check` ; `poetry run ruff format`.
