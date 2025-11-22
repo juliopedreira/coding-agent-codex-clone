@@ -73,6 +73,10 @@ def _render_value(value: Any, context: Dict[str, Any]) -> Any:
     if isinstance(value, list):
         return [_render_value(item, context) for item in value]
     if isinstance(value, str):
+        full_match = re.fullmatch(r"\{\{\s*([^}]+?)\s*\}\}", value)
+        if full_match:
+            return _eval_expr(full_match.group(1), context)
+
         def repl(match: re.Match[str]) -> str:
             expr = match.group(1)
             resolved = _eval_expr(expr, context)
@@ -246,9 +250,18 @@ class WorkflowRunTool(Tool):
                 transcripts.append(f"{step.get('id','unknown')}:skipped")
                 continue
 
-            if "loop" in step and isinstance(step["loop"], list):
+            if "loop" in step:
+                loop_values_raw = step["loop"]
+                loop_values = _render_value(loop_values_raw, context)
+                if isinstance(loop_values, str):
+                    try:
+                        loop_values = json.loads(loop_values)
+                    except Exception:
+                        loop_values = [loop_values]
+                if not isinstance(loop_values, list):
+                    loop_values = [loop_values]
                 loop_var = step.get("loop_var", "item")
-                for item in step["loop"]:
+                for item in loop_values:
                     context[loop_var] = item
                     result = self._run_step(step, registry, context, transcripts)
                     if not result.success:

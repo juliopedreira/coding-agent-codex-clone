@@ -45,10 +45,13 @@ class LlmNodeTool(Tool):
         temperature: float | None = None,
         max_tokens: int = 512,
         context: Dict[str, Any] | None = None,
+        model: str | None = None,
+        reasoning: str | None = None,  # captured for metadata only
     ) -> ToolResult:
         temperature = temperature if temperature is not None else self.settings.temperature
         model_used = "heuristic"
         raw_content: str
+        effective_model = model or self.settings.model
 
         prompt_message = user_message
         if json_schema:
@@ -68,7 +71,7 @@ class LlmNodeTool(Tool):
         if ChatOpenAI and self.settings.openai_api_key:
             try:
                 llm = ChatOpenAI(
-                    model=self.settings.model,
+                    model=effective_model,
                     temperature=temperature,
                     openai_api_key=self.settings.openai_api_key,
                     max_tokens=max_tokens,
@@ -79,7 +82,7 @@ class LlmNodeTool(Tool):
                 ]
                 resp = llm.invoke(messages)
                 raw_content = str(getattr(resp, "content", ""))
-                model_used = self.settings.model
+                model_used = effective_model
             except Exception:  # noqa: BLE001
                 raw_content = _fallback_response(prompt_message, json_schema)
         else:
@@ -98,5 +101,6 @@ class LlmNodeTool(Tool):
             "raw": raw_content,
             "json_schema": bool(json_schema),
             "tools_available": tools or [],
+            "reasoning": reasoning,
         }
         return ToolResult(output=output_value, success=True, metadata=metadata)

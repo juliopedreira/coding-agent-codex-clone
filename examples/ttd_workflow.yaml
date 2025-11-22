@@ -12,6 +12,7 @@ steps:
 
   - id: Plan
     tool: llm_node
+    context_keys: [FEATURE]
     args:
       system_prompt: "You are a senior engineer planning TDD for a feature."
       user_message: |
@@ -21,6 +22,27 @@ steps:
       json_schema:
         acceptance: ["string"]
       max_tokens: 200
+      reasoning: "high"
+
+  - id: DecomposeFeature
+    tool: llm_node
+    context_keys: [FEATURE]
+    args:
+      system_prompt: "You decompose features into actionable sub-tasks, each 3-6 words."
+      user_message: "Break FEATURE into 3-5 sub-tasks. FEATURE={{FEATURE}}"
+      json_schema:
+        tasks: ["string"]
+      max_tokens: 180
+      model: "gpt-4o-mini"
+
+  - id: PlanSubtasks
+    tool: fs_write
+    loop: "{{steps['DecomposeFeature'].output.tasks}}"
+    loop_var: subtask
+    args:
+      path: tmp/tdd_feature/subtasks.md
+      append: true
+      content: "- {{subtask}}\n"
 
   - id: WriteFailingTests
     tool: fs_write
@@ -49,6 +71,7 @@ steps:
       command: "cd tmp/tdd_feature && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 pytest -q --override-ini addopts=''"
       timeout_ms: 12000
     assign: failing_output
+    when: "steps['Plan'] != None"
 
   - id: LLMFailureSummary
     tool: llm_node
