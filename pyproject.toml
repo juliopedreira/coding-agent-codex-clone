@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "codex-clone"
+name = "codax-clone"
 version = "0.0.1"
 description = "CLI-first Codex-like agent using LangGraph + LangChain + langchain-openai."
 authors = ["Contributors"]
 readme = "README.md"
 license = "Proprietary"
-packages = [{ include = "codex", from = "src" }]
+packages = [{ include = "codax", from = "src" }]
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -21,6 +21,7 @@ sqlalchemy = "^2.0.32"
 httpx = "^0.27.0"
 rich = "^13.7.1"
 python-dotenv = "^1.0.1"
+common-expression-language = "^0.5.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
@@ -30,7 +31,7 @@ ruff = "^0.6.8"
 mypy = "^1.11.2"
 
 [tool.poetry.scripts]
-codex = "codex.cli:app"
+codax = "codax.cli:app"
 
 [build-system]
 requires = ["poetry-core"]
@@ -46,12 +47,12 @@ ignore = ["E203"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-addopts = "--cov=codex --cov-report=term --cov-report=json -q"
+addopts = "--cov=codax --cov-report=term --cov-report=json -q"
 testpaths = ["tests"]
 
 [tool.mypy]
 python_version = "3.12"
-packages = ["codex"]
+packages = ["codax"]
 strict = true
 exclude = ["tests"]
 ignore_missing_imports = true

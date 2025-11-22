@@ -1,0 +1,109 @@
+# Generic TDD workflow driven by the FEATURE param.
+steps:
+  - id: SetupDir
+    tool: fs_mkdir
+    args:
+      path: tmp/tdd_feature
+
+  - id: ScanCodebase
+    tool: fs_list
+    args:
+      path: src
+
+  - id: Plan
+    tool: llm_node
+    args:
+      system_prompt: "You are a senior engineer planning TDD for a feature."
+      user_message: |
+        We need to build the feature: {{FEATURE}}.
+        Repository top-level src entries: {{steps['ScanCodebase'].output}}.
+        Produce three crisp acceptance notes.
+      json_schema:
+        acceptance: ["string"]
+      max_tokens: 200
+
+  - id: WriteFailingTests
+    tool: fs_write
+    args:
+      path: tmp/tdd_feature/test_feature.py
+      content: |
+        from feature_impl import realize_feature
+
+        FEATURE = "{{FEATURE}}"
+
+        def test_status_and_message_contains_feature():
+            result = realize_feature(FEATURE)
+            assert result["status"] == "done"
+            assert FEATURE in result["message"]
+
+        def test_idempotent_and_notes():
+            first = realize_feature(FEATURE)
+            second = realize_feature(FEATURE)
+            assert first == second
+            assert "Verified" in first["notes"]
+
+  - id: FirstTestRun
+    tool: shell_command
+    allow_failure: true
+    args:
+      command: "cd tmp/tdd_feature && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 pytest -q --override-ini addopts=''"
+      timeout_ms: 12000
+    assign: failing_output
+
+  - id: LLMFailureSummary
+    tool: llm_node
+    args:
+      system_prompt: "You summarize failing pytest output."
+      user_message: |
+        Pytest output:
+        {{steps['FirstTestRun'].output}}
+        Provide a short diagnosis and the minimal change to pass.
+      json_schema:
+        failures: ["string"]
+        recommendation: "string"
+      max_tokens: 200
+
+  - id: ImplementFeature
+    tool: fs_write
+    args:
+      path: tmp/tdd_feature/feature_impl.py
+      content: |
+        from functools import lru_cache
+
+        @lru_cache(maxsize=None)
+        def realize_feature(feature: str) -> dict[str, str]:
+            """Return a deterministic record indicating the feature is delivered."""
+            return {
+                "feature": feature,
+                "status": "done",
+                "message": f"Implemented: {feature}",
+                "notes": f"Verified via tests for {feature}",
+            }
+
+  - id: PassingTestRun
+    tool: shell_command
+    args:
+      command: "cd tmp/tdd_feature && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 pytest -q --override-ini addopts=''"
+      timeout_ms: 12000
+    assign: passing_output
+
+  - id: WrapUp
+    tool: llm_node
+    args:
+      system_prompt: "You produce concise TDD recaps."
+      user_message: |
+        Feature: {{FEATURE}}
+        Plan: {{steps['Plan'].output}}
+        First run: {{steps['FirstTestRun'].output}}
+        Final run: {{steps['PassingTestRun'].output}}
+        Provide 3 bullets and a confidence 0-1.
+      json_schema:
+        bullets: ["string"]
+        confidence: 0.0
+      max_tokens: 150
+
+  - id: Report
+    tool: summarize
+    args:
+      text: "TDD workflow done for '{{FEATURE}}'. Final test log:\n{{steps['PassingTestRun'].output}}"
+      max_tokens: 60

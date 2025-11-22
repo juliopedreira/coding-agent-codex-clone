@@ -1,9 +1,9 @@
-# Codex Clone (Python)
+# Codax (Python)
 
-CLI-first Codex-like agent scaffold using LangGraph + LangChain + langchain-openai. The current state focuses on quality gates, tooling, and placeholders for the full Codex toolset and workflow engine.
+CLI-first coding assistant with LangGraph-inspired planner/executor, pluggable search, safety/approval controls, and hardened tool suite.
 
 ## Status
-- Skeleton only: tools/agent/workflows are stubs awaiting full implementations.
+- Core tools, safety policy, search backends, workflow runner, and CLI console implemented.
 - Quality gates enforced: strict typing (mypy), lint/format (ruff), per-file coverage ≥80%.
 
 ## Prerequisites
@@ -12,11 +12,13 @@ CLI-first Codex-like agent scaffold using LangGraph + LangChain + langchain-open
 
 ## Setup & Usage
 1) Install deps: `poetry install`  
-2) CLI help: `poetry run codex --help`  
-3) Run a prompt: `poetry run codex run "hello"`  
-4) Run a workflow (stub): `poetry run codex workflow examples/demo.yaml`
-5) Interactive console: `poetry run codex` then type prompts; `exit` to quit.  
-   - Commands: `/model <name>` to switch models (default: `codex-max`), `/reason <effort>` to set reasoning effort.
+2) CLI help: `poetry run codax --help`  
+3) Run a prompt: `poetry run codax run "hello"`  
+4) Run a workflow: `poetry run codax workflow examples/demo_workflow.yaml`
+   - TTD example with LLM nodes + CEL templating and params:
+     `poetry run codax workflow examples/ttd_workflow.yaml --FEATURE="Add a log in mechanism"`
+5) Interactive console: `poetry run codax` then type prompts; `exit` to quit.  
+   - Commands: `/model <name>`, `/reason <effort>`, `/safety <mode>`, `/search_backend <name>`, `/save`.
 
 ### Using a virtual environment (recommended)
 If you want an isolated env without touching global Python:
@@ -29,7 +31,7 @@ If you want an isolated env without touching global Python:
 3) Install project deps (still uses Poetry, but now inside your venv):  
    - `poetry install`
 4) Run commands as usual:  
-   - `poetry run codex --help` or any of the commands above.
+   - `poetry run codax --help` or any of the commands above.
 
 ## Dev Commands
 - Lint: `poetry run ruff check`
@@ -40,16 +42,14 @@ If you want an isolated env without touching global Python:
 
 ## Quality Gates
 - Pytest writes `coverage.json`; gate script ensures every source file stays ≥80% covered.
-- Strict mypy on `src/codex`; tests excluded from typing.
+- Strict mypy on `src/codax`; tests excluded from typing.
 - Ruff enforces import order and basic lint rules.
 
 ## Project Layout
-- `src/codex/` — CLI (`cli.py`), config, logging, agent stubs, tools, workflows, DB helpers.
+- `src/codax/` — CLI, config, logging, agent runtime, tools, workflows, DB helpers.
 - `tests/` — unit coverage for current surface.
 - `docs/` — requirements/design (see `docs/functional/requirements/REQUIREMENTS_v00.md`).
 - `scripts/` — automation utilities (coverage gate).
 
 ## Next Steps
-- Implement Codex-parity tools (fs, git, http, search, summarize).
-- Build LangGraph agent assembly and workflow compiler.
-- Add examples and integration tests mirroring original Codex behaviors.
+- Expand examples and live-run guidance; enrich LangGraph planner and streaming UX.
