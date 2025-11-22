@@ -82,6 +82,23 @@ def _render_value(value: Any, context: Dict[str, Any]) -> Any:
     return value
 
 
+def _select_context(context: Dict[str, Any], keys: list[str]) -> Dict[str, Any]:
+    """Pick specific keys from the workflow context, coercing StepRecord to output."""
+
+    selected: Dict[str, Any] = {}
+    steps_map = context.get("steps") if isinstance(context.get("steps"), dict) else {}
+    for key in keys:
+        value: Any = None
+        if key in context:
+            value = context.get(key)
+        elif isinstance(steps_map, dict) and key in steps_map:
+            value = steps_map[key]
+        if isinstance(value, StepRecord):
+            value = value.output
+        selected[key] = value
+    return selected
+
+
 @dataclass
 class StepRecord:
     output: Any
@@ -156,6 +173,12 @@ class WorkflowRunTool(Tool):
         tool = registry[tool_name]
         raw_args: Dict[str, Any] = step.get("args", {})
         rendered_args = self._render_args(raw_args, context)
+
+        # Optional fine-grained context passing for tools that support it.
+        if step.get("context_keys") and getattr(tool, "accepts_context", False):
+            keys = step.get("context_keys")
+            if isinstance(keys, list):
+                rendered_args["context"] = _select_context(context, keys)
 
         retries = int(step.get("retries", 0))
         attempt = 0

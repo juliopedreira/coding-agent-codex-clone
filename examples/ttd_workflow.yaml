@@ -52,6 +52,7 @@ steps:
 
   - id: LLMFailureSummary
     tool: llm_node
+    context_keys: [failing_output]
     args:
       system_prompt: "You summarize failing pytest output."
       user_message: |
@@ -89,6 +90,7 @@ steps:
 
   - id: WrapUp
     tool: llm_node
+    context_keys: [Plan, FirstTestRun, PassingTestRun]
     args:
       system_prompt: "You produce concise TDD recaps."
       user_message: |

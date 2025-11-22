@@ -2,7 +2,7 @@ import json
 
 from codax.config import Settings
 from codax.tools.llm_node import LlmNodeTool
-from codax.tools.workflow_tools import StepRecord, _render_value
+from codax.tools.workflow_tools import StepRecord, _render_value, _select_context
 from codax.workflows import compiler
 
 
@@ -38,3 +38,11 @@ def test_llm_node_fallback_json() -> None:
     assert result.success
     assert isinstance(result.output, dict)
     assert "bullets" in result.output
+
+
+def test_select_context_keys_are_passed() -> None:
+    ctx = {"foo": "bar", "steps": {"X": StepRecord(output="baz", metadata=None, success=True)}}
+    selected = _select_context(ctx, ["foo", "X", "missing"])
+    assert selected["foo"] == "bar"
+    assert selected["X"] == "baz"
+    assert "missing" in selected

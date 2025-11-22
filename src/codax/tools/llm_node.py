@@ -31,6 +31,7 @@ def _fallback_response(user_message: str, json_schema: Dict[str, Any] | None = N
 class LlmNodeTool(Tool):
     name = "llm_node"
     description = "Single-turn LLM node with system/user prompts and optional JSON output."
+    accepts_context = True
 
     def __init__(self, settings: Settings | None = None) -> None:
         self.settings = settings or Settings()
@@ -43,6 +44,7 @@ class LlmNodeTool(Tool):
         json_schema: Dict[str, Any] | None = None,
         temperature: float | None = None,
         max_tokens: int = 512,
+        context: Dict[str, Any] | None = None,
     ) -> ToolResult:
         temperature = temperature if temperature is not None else self.settings.temperature
         model_used = "heuristic"
@@ -55,6 +57,13 @@ class LlmNodeTool(Tool):
                 f"{user_message}\nReturn a JSON object with keys: {keys}. "
                 "Keep values concise."
             )
+
+        if context:
+            try:
+                ctx_json = json.dumps(context, ensure_ascii=False, default=str)
+                prompt_message += f"\nContext JSON:\n{ctx_json}"
+            except Exception:
+                prompt_message += "\n(Context serialization failed; using raw context omitted.)"
 
         if ChatOpenAI and self.settings.openai_api_key:
             try:
