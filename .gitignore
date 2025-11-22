@@ -12,3 +12,6 @@ htmlcov/
 coverage.json
 codex.db
 .env
+tmp/
+tmp_*/
+examples/tmp/
